@@ -1,7 +1,7 @@
 // Deploys the telegram edge function to Supabase and syncs its secrets from .env.
 //   npm run deploy            (needs SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF in .env)
 // Uses the Management API directly, so no Supabase CLI or Docker is needed.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { buildContextModule } from './build-context.js';
 
 const TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
@@ -43,8 +43,7 @@ if (!res.ok) process.exit(1);
 const FILES = [
   'supabase/functions/telegram/index.js',
   'supabase/functions/telegram/deno.json',
-  'lib/bot.js', 'lib/checks.js', 'lib/context.js', 'lib/env.js', 'lib/format.js',
-  'lib/gemini.js', 'lib/pipeline.js', 'lib/store.js', 'lib/telegram.js', 'lib/voice-profile.js',
+  ...readdirSync('lib').filter((f) => f.endsWith('.js')).map((f) => `lib/${f}`),
 ];
 const form = new FormData();
 form.append('metadata', JSON.stringify({

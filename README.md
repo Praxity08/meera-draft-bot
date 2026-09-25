@@ -19,13 +19,13 @@ Free-plan limits to know about: each call has 150s of wall-clock time, and a pro
 | Stage | Where | What happens |
 |---|---|---|
 | Trigger | `supabase/functions/telegram` | Telegram webhook for `message` and `channel_post` updates; duplicates are ignored via `telegram_updates` |
-| Input | `lib/bot.js` | Only chats in `ALLOWED_CHAT_IDS` are processed (Meera's private "My notes" channel). Text only; voice notes arrive already transcribed |
+| Input | `lib/bot.js`, `lib/transcribe.js` | Only chats in `ALLOWED_CHAT_IDS` are processed (Meera's private "My notes" channel). Text, voice notes and audio files (up to 20 min). Audio is transcribed verbatim by `gemini-3.5-transcribe` with en-IN/hi-IN/ml-IN hints and her technical vocabulary; replies show a "Heard:" line so mis-hearings are easy to spot |
 | Context | `context/voice-skill.txt`, `context/published/*.txt` | Voice profile, plus any published pieces added for grounding |
 | Screen | `lib/pipeline.js → screenNote` | Gemini scores the note 1–10 against a strict rubric (structured JSON). Below `PASS_SCORE` (default 6), sales-led, or needing invented facts → sent back with what's missing |
 | Angle | `findAngle` | Gemini + Google Search grounding finds one current news/data item. Used only if Search actually returned results; source links come from grounding metadata, not model-typed text |
 | Draft | `writeDraft` | Gemini drafts with the voice profile as system prompt. Facts limited to the note, the sourced angle, and her profile; claims can't be made stronger than in the note; gaps become `[CHECK: …]` placeholders |
 | Check | `lib/checks.js` | Code-based voice lint (emoji, hashtags, `!`, banned words, CTAs, question openers) triggers one revision; any figure not in the note or source is flagged |
-| Output | `lib/format.js` | Review sheet headed **DRAFT: WAITING FOR YOUR REVIEW** (score, angle + sources, things to check), then the post on its own so it copies cleanly |
+| Output | `lib/format.js` | Review sheet headed **DRAFT: WAITING FOR YOUR REVIEW** (score, angle + sources, things to check), then the post with **Approve / Redraft / Delete** buttons. Approve marks it final (never posts), Redraft writes a different version, Delete (with confirmation) removes the draft and the bot's messages |
 
 Models: screening and search on `gemini-3.7-flash`, drafting on `gemini-3.8-flash`, falling back through other 3.x Flash models on overload or an exhausted daily quota.
 
