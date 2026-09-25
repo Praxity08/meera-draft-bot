@@ -17,6 +17,7 @@
     "webhook:info": "node --env-file-if-exists=.env scripts/set-webhook.js --info"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "@google/genai": "^2.24.0"
   }
 }

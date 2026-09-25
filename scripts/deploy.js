@@ -27,6 +27,8 @@ const secrets = {
   SB_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
 };
 const missing = Object.entries(secrets).filter(([, v]) => !v).map(([k]) => k);
+// Optional: enables the Google News angle (Claude picks the item).
+if (process.env.ANTHROPIC_API_KEY) secrets.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 if (missing.length) {
   console.error(`Missing in .env: ${missing.join(', ')}`);
   process.exit(1);

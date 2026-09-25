@@ -28,10 +28,12 @@ test('no publishing or scheduling code anywhere', () => {
   }
 });
 
-test('outbound hosts are limited to Telegram (runtime) and the Supabase Management API (deploy)', () => {
+test('outbound hosts are limited to Telegram and Google News (runtime) and the Supabase Management API (deploy)', () => {
   for (const file of code.filter((f) => f.endsWith('.js') && f !== 'lib/voice-profile.js')) {
     for (const [url] of readFileSync(file, 'utf8').matchAll(/https?:\/\/[^\s'"`/]+/g)) {
-      const ok = url === 'https://api.telegram.org' || (file.startsWith('scripts/') && ['https://api.supabase.com', 'https://${REF}.supabase.co'].includes(url));
+      const ok = url === 'https://api.telegram.org'
+        || (file === 'lib/news.js' && url === 'https://news.google.com')
+        || (file.startsWith('scripts/') && ['https://api.supabase.com', 'https://${REF}.supabase.co'].includes(url));
       assert.ok(ok, `${file} calls ${url}`);
     }
   }
