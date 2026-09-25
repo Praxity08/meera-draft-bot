@@ -49,3 +49,10 @@ test('Gemini calls give up with a 504 once the time budget is spent', async () =
   );
   assert.ok(Date.now() - t0 < 500, 'should fail fast without calling Gemini');
 });
+
+test('a call cancelled by our timeout counts as temporary, so the next model is tried', async () => {
+  const { isTransient } = await import('../lib/gemini.js');
+  assert.ok(isTransient(Object.assign(new Error('The signal has been aborted'), { name: 'AbortError' })));
+  assert.ok(isTransient(new Error('The signal has been aborted')));
+  assert.ok(!isTransient(new Error('Invalid JSON schema')));
+});
