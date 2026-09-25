@@ -1,7 +1,7 @@
 // One polling pass: fetch new Telegram updates, handle each, and confirm it so it isn't seen again.
 // Run by .github/workflows/poll.yml on a timer; also works locally with `npm run poll`.
 import { telegram } from '../lib/telegram.js';
-import { handleUpdate } from '../lib/bot.js';
+import { handleUpdate, RetryLater } from '../lib/bot.js';
 
 const ALLOWED_UPDATES = ['message', 'channel_post'];
 
@@ -15,8 +15,13 @@ console.log(`${updates.length} new update(s)`);
 let failed = 0;
 for (const update of updates) {
   try {
-    await handleUpdate(update);
+    console.log(`update ${update.update_id}: ${(await handleUpdate(update)) ?? 'handled'}`);
   } catch (err) {
+    if (err instanceof RetryLater) {
+      // Leave this and later updates unconfirmed; the next run picks them up in order.
+      console.log(`update ${update.update_id}: Gemini unavailable (${err.message.slice(0, 120)}), will retry next run`);
+      break;
+    }
     failed++;
     console.error(`update ${update.update_id} failed:`, err);
   }
