@@ -1,0 +1,21 @@
+{
+  "name": "meera-draft-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Telegram bot that screens Meera's note fragments and returns LinkedIn DRAFTS for human review. Never publishes.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "try": "node --env-file-if-exists=.env scripts/try-note.js",
+    "models": "node --env-file-if-exists=.env scripts/list-models.js",
+    "webhook:set": "node --env-file-if-exists=.env scripts/set-webhook.js",
+    "webhook:info": "node --env-file-if-exists=.env scripts/set-webhook.js --info"
+  },
+  "dependencies": {
+    "@google/genai": "^2.24.0",
+    "@vercel/functions": "^3.9.9"
+  }
+}
