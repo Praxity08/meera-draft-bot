@@ -38,3 +38,14 @@ test('sourcesForFact keeps only the chunks that support the fact', () => {
   assert.equal(r.matched, true);
   assert.deepEqual(r.sources, [{ title: 'b.com', uri: 'u2' }]);
 });
+
+test('Gemini calls give up with a 504 once the time budget is spent', async () => {
+  process.env.GEMINI_API_KEY ??= 'unused';
+  const { withBudget, generateJSON } = await import('../lib/gemini.js');
+  const t0 = Date.now();
+  await assert.rejects(
+    withBudget(1_000, () => generateJSON({ model: 'gemini-3.8-flash', system: 's', prompt: 'p', schema: { type: 'object' } })),
+    (err) => err.status === 504,
+  );
+  assert.ok(Date.now() - t0 < 500, 'should fail fast without calling Gemini');
+});
