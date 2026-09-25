@@ -4,21 +4,21 @@ A Telegram bot that takes Meera's transcribed voice-note fragments, screens them
 
 ## How it runs
 
-There is no server. The backend is a scheduled GitHub Actions workflow in a **private** repo ([.github/workflows/poll.yml](.github/workflows/poll.yml)):
+The backend is a **Supabase Edge Function** ([supabase/functions/telegram/index.js](supabase/functions/telegram/index.js)) registered as the bot's Telegram webhook. Posting a note in the channel triggers it immediately:
 
-1. Every 30 minutes (or on demand with **Run workflow**), `scripts/poll.js` fetches new posts from Telegram with `getUpdates`.
-2. Each note goes through the pipeline below and the replies land in the chat, threaded under the note.
-3. Drafts are written to `drafts/*.json` and the workflow commits them, so the repo is the review history.
+1. Telegram calls the function. It checks Telegram's secret header, acknowledges straight away, and keeps working in the background.
+2. The note goes through the pipeline below. Replies land in the chat, threaded under the note, usually within a minute.
+3. Drafts are saved to the `drafts` table in Supabase Postgres ([migration](supabase/migrations/20260925000000_drafts.sql)). `telegram_updates` records handled update ids so a redelivered webhook never drafts twice. Both tables have RLS on with no policies, so only the function's secret key can read them.
 
-Telegram is the only interface. The only way Meera sees or retrieves drafts is in chat (`/drafts`, `/draft <id>`).
+Telegram is the only interface. Meera sees and retrieves drafts only in chat (`/drafts`, `/draft <id>`).
 
-Why 30 minutes: private repos get 2,000 free Actions minutes/month and every run bills at least a minute. Every 30 minutes is about 1,440 min/month. Change the cron if your plan allows more.
+Free-plan limits to know about: each call has 150s of wall-clock time, and a project with no activity for about a week may be paused (restore it from the Supabase dashboard).
 
 ## Pipeline
 
 | Stage | Where | What happens |
 |---|---|---|
-| Trigger | `scripts/poll.js` | Picks up `message` and `channel_post` updates, confirms each after handling so nothing is drafted twice |
+| Trigger | `supabase/functions/telegram` | Telegram webhook for `message` and `channel_post` updates; duplicates are ignored via `telegram_updates` |
 | Input | `lib/bot.js` | Only chats in `ALLOWED_CHAT_IDS` are processed (Meera's private "My notes" channel). Text only; voice notes arrive already transcribed |
 | Context | `context/voice-skill.txt`, `context/published/*.txt` | Voice profile, plus any published pieces added for grounding |
 | Screen | `lib/pipeline.js → screenNote` | Gemini scores the note 1–10 against a strict rubric (structured JSON). Below `PASS_SCORE` (default 6), sales-led, or needing invented facts → sent back with what's missing |
@@ -29,22 +29,29 @@ Why 30 minutes: private repos get 2,000 free Actions minutes/month and every run
 
 Models: screening and search on `gemini-3.7-flash`, drafting on `gemini-3.8-flash`, falling back through other 3.x Flash models on overload or an exhausted daily quota.
 
-`test/no-publish.test.js` fails if code gains a LinkedIn or posting-tool call, any outbound host other than Telegram, or a workflow step beyond the poller.
+`test/no-publish.test.js` fails if code gains a LinkedIn or posting-tool call, a scheduler (GitHub Actions, pg_cron), or any outbound host other than Telegram at runtime.
 
 ## Setup
 
 ```bash
 npm install
-cp .env.example .env     # fill in TELEGRAM_BOT_TOKEN, GEMINI_API_KEY, ALLOWED_CHAT_IDS
+cp .env.example .env      # fill in the Telegram, Gemini and Supabase values
 npm test
-npm run try -- samples/strong-note.txt   # pipeline only, no Telegram
-npm run poll                             # one real pass against Telegram
+npm run try -- samples/strong-note.txt   # pipeline only; prints the result, saves nothing
 ```
 
-## Deploy (GitHub)
+The voice profile is bundled into the function. After editing anything in `context/`:
 
 ```bash
-gh repo create meera-draft-bot --private --source . --push
-gh secret set -f .env     # uploads the .env values as Actions secrets; .env itself is never committed
-gh workflow run poll-notes
+npm run build:context
+```
+
+## Deploy (Supabase)
+
+Apply `supabase/migrations/*.sql` once (SQL editor, or the Management API), then:
+
+```bash
+npm run deploy        # syncs secrets from .env and uploads the function; no Supabase CLI needed
+npm run webhook:set   # points the bot at https://<project-ref>.supabase.co/functions/v1/telegram
+npm run webhook:info
 ```

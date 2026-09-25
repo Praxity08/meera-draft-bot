@@ -2,16 +2,19 @@
   "name": "meera-draft-bot",
   "version": "0.1.0",
   "private": true,
-  "description": "Telegram bot that screens Meera's note fragments and returns LinkedIn DRAFTS for human review. Never publishes.",
+  "description": "Telegram bot that screens Meera's note fragments and returns LinkedIn DRAFTS for human review. Never publishes. Runs as a Supabase edge function.",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "test": "node --test \"test/*.test.js\"",
+    "build:context": "node scripts/build-context.js",
     "try": "node --env-file-if-exists=.env scripts/try-note.js",
     "models": "node --env-file-if-exists=.env scripts/list-models.js",
-    "poll": "node --env-file-if-exists=.env scripts/poll.js"
+    "deploy": "node --env-file-if-exists=.env scripts/deploy.js",
+    "webhook:set": "node --env-file-if-exists=.env scripts/set-webhook.js",
+    "webhook:info": "node --env-file-if-exists=.env scripts/set-webhook.js --info"
   },
   "dependencies": {
     "@google/genai": "^2.24.0"

@@ -3,7 +3,6 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { runPipeline } from '../lib/pipeline.js';
 import { formatRejection, formatReview } from '../lib/format.js';
-import { saveDraft } from '../lib/store.js';
 
 const arg = process.argv.slice(2).join(' ').trim();
 const note = arg ? (existsSync(arg) ? readFileSync(arg, 'utf8') : arg) : readFileSync(0, 'utf8');
@@ -19,8 +18,7 @@ console.error(`[${((Date.now() - t0) / 1000).toFixed(1)}s] done\n`);
 if (result.status === 'rejected') {
   console.log(formatRejection(result));
 } else {
-  const id = await saveDraft('local', result);
-  console.log(formatReview(result, id));
+  console.log(formatReview(result, null)); // local runs don't write to the live drafts table
   console.log('\n----- DRAFT -----\n');
   console.log(result.draft.post);
 }
