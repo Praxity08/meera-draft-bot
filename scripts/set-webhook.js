@@ -20,7 +20,7 @@ if (!secret) {
 }
 
 const url = `${base.replace(/\/$/, '')}/api/telegram`;
-await telegram('setWebhook', { url, secret_token: secret, allowed_updates: ['message'], drop_pending_updates: true });
+await telegram('setWebhook', { url, secret_token: secret, allowed_updates: ['message', 'channel_post'], drop_pending_updates: true });
 await telegram('setMyCommands', {
   commands: [
     { command: 'drafts', description: 'List recent drafts' },
