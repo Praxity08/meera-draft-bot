@@ -15,7 +15,7 @@ if (!REF || !secret) {
 }
 
 const url = `https://${REF}.supabase.co/functions/v1/telegram`;
-await telegram('setWebhook', { url, secret_token: secret, allowed_updates: ['message', 'channel_post'] });
+await telegram('setWebhook', { url, secret_token: secret, allowed_updates: ['message', 'channel_post', 'callback_query'] });
 await telegram('setMyCommands', {
   commands: [
     { command: 'drafts', description: 'List recent drafts' },
