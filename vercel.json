@@ -1,8 +1,0 @@
-{
-  "functions": {
-    "api/telegram.js": {
-      "maxDuration": 120,
-      "includeFiles": "context/**"
-    }
-  }
-}

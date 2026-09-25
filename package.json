@@ -11,11 +11,9 @@
     "test": "node --test \"test/*.test.js\"",
     "try": "node --env-file-if-exists=.env scripts/try-note.js",
     "models": "node --env-file-if-exists=.env scripts/list-models.js",
-    "webhook:set": "node --env-file-if-exists=.env scripts/set-webhook.js",
-    "webhook:info": "node --env-file-if-exists=.env scripts/set-webhook.js --info"
+    "poll": "node --env-file-if-exists=.env scripts/poll.js"
   },
   "dependencies": {
-    "@google/genai": "^2.24.0",
-    "@vercel/functions": "^3.9.9"
+    "@google/genai": "^2.24.0"
   }
 }
