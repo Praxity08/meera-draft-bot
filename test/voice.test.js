@@ -45,7 +45,8 @@ test('a voice note is downloaded, transcribed, screened, and the reply shows wha
     update_id: 1,
     channel_post: { message_id: 42, date: 1, chat: { id: CHAT, type: 'channel' }, voice: { file_id: 'F1', mime_type: 'audio/ogg', duration: 12 } },
   });
-  assert.equal(outcome, 'rejected (2/10)');
+  assert.match(outcome, /^rejected \(2\/10\) \[voice 12s audio\/ogg/);
+  assert.match(outcome, /transcribe gemini-3.5-transcribe ok/);
 
   const transcribeCall = calls.find((c) => c.method.startsWith('gemini:') && c.method.includes('transcribe'));
   assert.equal(transcribeCall.body.contents[0].parts[0].inlineData.mimeType, 'audio/ogg');
